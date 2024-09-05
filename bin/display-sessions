@@ -38,6 +38,9 @@ STRIPPED_SESSION="${SELECTED_SESSION#* }"
 if echo "$SESSIONS" | grep -q "$SELECTED_SESSION$"; then
   tmux switch-client -t "$STRIPPED_SESSION"
 elif echo "$TMUXP_SESSIONS" | grep -q "$SELECTED_SESSION$"; then
+  # Load the tmuxp session in detached mode
   tmuxp load -d "$STRIPPED_SESSION"
+  # Immediately switch to the newly loaded session
+  tmux switch-client -t "$STRIPPED_SESSION"
 fi
 
