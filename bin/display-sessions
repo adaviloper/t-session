@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Define icons for tmux sessions and tmuxp sessions
+SESSION_ICON="🟢"    # Icon for active tmux sessions
+TMUXP_ICON="📂"     # Icon for tmuxp sessions
+
+# List active tmux sessions and prepend the icon
+SESSIONS=$(tmux list-sessions -F "#{session_name}" | sed "s/^/$SESSION_ICON /")
+
+# List tmuxp sessions from the .config/tmuxp directory and prepend the icon
+TMUXP_DIR="$HOME/.config/tmuxp"
+if [ -d "$TMUXP_DIR" ]; then
+  TMUXP_SESSIONS=$(ls "$TMUXP_DIR"/*.yaml 2>/dev/null | xargs -n 1 basename | sed "s/^/$TMUXP_ICON /" | sed 's/\.yaml$//')
+fi
+
+# Combine the session lists
+COMBINED_SESSIONS=$(echo -e "Tmux Sessions:\n$SESSIONS\n\nTmuxp Sessions:\n$TMUXP_SESSIONS")
+
+# Display the sessions in a tmux popup and allow the user to select one
+SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border)
+
+# Strip the icon from the selected session before handling it
+STRIPPED_SESSION="${SELECTED_SESSION#* }"
+
+# Switch to the selected tmux session if it exists, or load the tmuxp session
+if echo "$SESSIONS" | grep -q "$SELECTED_SESSION$"; then
+  tmux switch-client -t "$STRIPPED_SESSION"
+elif echo "$TMUXP_SESSIONS" | grep -q "$SELECTED_SESSION$"; then
+  tmuxp load "$STRIPPED_SESSION"
+fi
+
