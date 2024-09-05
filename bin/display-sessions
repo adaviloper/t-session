@@ -1,5 +1,14 @@
 #!/bin/bash
 
+function check_directory() {
+    local expanded_path=$(eval echo $1)
+    if [ -d "$expanded_path" ]; then
+        return 0  # Directory exists
+    else
+        return 1  # Directory does not exist
+    fi
+}
+
 # Define icons for tmux sessions and tmuxp sessions
 SESSION_ICON="🟢"    # Icon for active tmux sessions
 TMUXP_ICON="📂"     # Icon for tmuxp sessions
@@ -17,7 +26,7 @@ if [ -d "$TMUXP_DIR" ]; then
     start_directory=$(yq e '.start_directory' "$file")  # Extract start_directory using yq
 
     # Check if the session is not active and if the start_directory exists
-    if [ -d "$start_directory" ] && ! echo "$SESSIONS" | grep -q "$session_name"; then
+    if [ check_directory "$start_directory" ] && ! echo "$SESSIONS" | grep -q "$session_name"; then
       TMUXP_SESSIONS+="$TMUXP_ICON $session_name"$'\n'
     fi
   done
