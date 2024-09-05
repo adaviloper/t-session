@@ -26,6 +26,7 @@ STRIPPED_SESSION="${SELECTED_SESSION#* }"
 if echo "$SESSIONS" | grep -q "$SELECTED_SESSION$"; then
   tmux switch-client -t "$STRIPPED_SESSION"
 elif echo "$TMUXP_SESSIONS" | grep -q "$SELECTED_SESSION$"; then
-  tmuxp load "$STRIPPED_SESSION"
+  tmuxp load -d "$STRIPPED_SESSION"
+  tmuxp switch-client -t "$STRIPPED_SESSION"
 fi
 
