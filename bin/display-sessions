@@ -34,7 +34,7 @@ if [ -d "$TMUXP_DIR" ]; then
 fi
 
 # List zoxide entries
-ZOXIDE_ENTRIES=$(zoxide list | awk '{print "'$ZOXIDE_ICON' "$0}')
+ZOXIDE_ENTRIES=$(zoxide query -l | awk '{print "'$ZOXIDE_ICON' "$0}')
 
 # Combine the session lists
 COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS\nZoxide Entries:\n$ZOXIDE_ENTRIES")
