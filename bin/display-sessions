@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Define icons for tmux sessions and tmuxp sessions
-SESSION_ICON="🟢"    # Icon for active tmux sessions
-TMUXP_ICON="📂"     # Icon for tmuxp sessions
+SESSION_ICON=""    # Icon for active tmux sessions
+TMUXP_ICON=""     # Icon for tmuxp sessions
 
 # Get the current tmux session
 CURRENT_SESSION=$(tmux display-message -p '#S')
