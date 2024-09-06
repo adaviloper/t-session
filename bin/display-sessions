@@ -5,8 +5,8 @@ GREY=$(tput setaf 7)
 RESET=$(tput sgr0)
 
 # Define icons with colors
-SESSION_ICON="${GREEN}${RESET}"    # Green icon for active tmux sessions
-TMUXP_ICON="${GREY}m${RESET}"     # Grey icon for tmuxp sessions
+SESSION_ICON="\033[32m\033[0m"    # Green icon for active tmux sessions
+TMUXP_ICON="\033[37m\033[0m"     # Grey icon for tmuxp sessions
 
 # Get the current tmux session
 CURRENT_SESSION=$(tmux display-message -p '#S')
@@ -34,7 +34,7 @@ if [ -d "$TMUXP_DIR" ]; then
 fi
 
 # Combine the session lists
-COMBINED_SESSIONS=$(echo -e "Tmux Sessions:\n$SESSIONS\n\nTmuxp Sessions:\n$TMUXP_SESSIONS")
+COMBINED_SESSIONS=$(echo -e "Sessions:\n$SESSIONS\n$TMUXP_SESSIONS")
 
 # Display the sessions in a tmux popup and allow the user to select one
 SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border)
