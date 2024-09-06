@@ -33,8 +33,9 @@ if [ -d "$TMUXP_DIR" ]; then
   done
 fi
 
-# List zoxide entries and replace the full home path with ~
-ZOXIDE_ENTRIES=$(zoxide query -l | awk -v home="$HOME" '{gsub(home, "~"); print "'$ZOXIDE_ICON' " $0}')
+# List zoxide entries using `zoxide query -l` and replace the full home path with ~
+# Extract just the basename of the directory for zoxide entries
+ZOXIDE_ENTRIES=$(zoxide query -l | awk -v home="$HOME" '{gsub(home, "~"); print "'$ZOXIDE_ICON' " $NF}')
 
 # Combine the session lists
 COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS\nZoxide Entries:\n$ZOXIDE_ENTRIES")
