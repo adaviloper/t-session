@@ -33,10 +33,10 @@ if [ -d "$TMUXP_DIR" ]; then
 fi
 
 # Combine the session lists
-COMBINED_SESSIONS=$(echo -e "Tmux Sessions:\n$SESSIONS\n$TMUXP_SESSIONS")
+COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS")
 
 # Display the sessions in a tmux popup and allow the user to select one
-SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border)
+SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border --header="Sessions")
 
 # Exit if no session is selected (Escape or empty selection)
 if [ -z "$SELECTED_SESSION" ]; then
