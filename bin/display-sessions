@@ -5,8 +5,8 @@ GREY=$(tput setaf 7)
 RESET=$(tput sgr0)
 
 # Define icons with colors
-SESSION_ICON="\033[32m\033[0m"    # Green icon for active tmux sessions
-TMUXP_ICON="\033[37m\033[0m"     # Grey icon for tmuxp sessions
+SESSION_ICON=""    # Green icon for active tmux sessions
+TMUXP_ICON=""     # Grey icon for tmuxp sessions
 
 # Get the current tmux session
 CURRENT_SESSION=$(tmux display-message -p '#S')
