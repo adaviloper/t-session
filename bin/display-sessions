@@ -28,14 +28,14 @@ if [ -d "$TMUXP_DIR" ]; then
     start_directory=$(eval echo "$start_directory")
 
     # Check if the session is not active (including the current session) and if the start_directory exists
-    if [ -d "$start_directory" ] && ! echo "$SESSIONS" | grep -q "$session_name" && [ "$session_name" != "$CURRENT_SESSION" ]; then
+    if [ -d "$start_directory" ] && ! echo "$SESSIONS" | grep -q -F "$session_name" && [ "$session_name" != "$CURRENT_SESSION" ]; then
       TMUXP_SESSIONS+="$TMUXP_ICON $session_name"$'\n'
     fi
   done
 fi
 
 # Combine the session lists
-COMBINED_SESSIONS=$(echo -e "Tmux Sessions:\n$SESSIONS\n$TMUXP_SESSIONS")
+COMBINED_SESSIONS=$(echo -e "Tmux Sessions:\n$SESSIONS\n\nTmuxp Sessions:\n$TMUXP_SESSIONS")
 
 # Display the sessions in a tmux popup and allow the user to select one
 SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border --preview "echo {}" --preview-window=up:3 --ansi)
@@ -48,13 +48,16 @@ fi
 # Strip the icon from the selected session before handling it
 STRIPPED_SESSION="${SELECTED_SESSION#* }"
 
+# Ensure that the selected session name is properly quoted
+ESCAPED_SESSION=$(printf '%q' "$STRIPPED_SESSION")
+
 # Switch to the selected tmux session if it exists, or load the tmuxp session in detached state
-if echo "$SESSIONS" | grep -q -F "$STRIPPED_SESSION"; then
-  tmux switch-client -t "$STRIPPED_SESSION"
-elif echo "$TMUXP_SESSIONS" | grep -q -F "$STRIPPED_SESSION"; then
+if echo "$SESSIONS" | grep -q -F "$ESCAPED_SESSION"; then
+  tmux switch-client -t "$ESCAPED_SESSION"
+elif echo "$TMUXP_SESSIONS" | grep -q -F "$ESCAPED_SESSION"; then
   # Load the tmuxp session in detached mode
-  tmuxp load -d "$STRIPPED_SESSION"
+  tmuxp load -d "$ESCAPED_SESSION"
   # Immediately switch to the newly loaded session
-  tmux switch-client -t "$STRIPPED_SESSION"
+  tmux switch-client -t "$ESCAPED_SESSION"
 fi
 
