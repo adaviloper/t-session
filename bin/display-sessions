@@ -79,7 +79,7 @@ elif [ -n "$ZOXIDE_PATH" ]; then
     # Create a new tmux session in the selected directory
     tmux new-session -d -c "$FINAL_PATH" -s "$ZOXIDE_PATH"
     # Attach to the newly created session
-    tmux switch-client -t "$FINAL_PATH"
+    tmux switch-client -t "$ZOXIDE_PATH"
   fi
 else
   echo "No matching tmux, tmuxp, or zoxide entry found for: $SESSION_NAME" >&2
