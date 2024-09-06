@@ -35,10 +35,25 @@ fi
 
 # List zoxide entries using `zoxide query -l` and replace the full home path with ~
 # Extract just the basename of the directory for zoxide entries
-ZOXIDE_ENTRIES=$(zoxide query -l | awk -v home="$HOME" '{gsub(home, "~"); print "'$ZOXIDE_ICON' " $NF}')
+ZOXIDE_ENTRIES=$(zoxide query -l | awk -v home="$HOME" '{gsub(home, "~"); print "'$ZOXIDE_ICON' " basename($0)}')
+
+# Exclude zoxide entries that have the same basename as an active tmux session
+EXCLUDED_ZOXIDE_ENTRIES=$(echo "$ZOXIDE_ENTRIES" | awk -v active_sessions="$SESSIONS" '
+BEGIN {
+  split(active_sessions, sessions, "\n")
+  for (i in sessions) {
+    session_map[sessions[i]] = 1
+  }
+}
+{
+  entry_name = substr($0, index($0, " ") + 1)
+  if (!session_map[entry_name]) {
+    print
+  }
+}')
 
 # Combine the session lists
-COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS\nZoxide Entries:\n$ZOXIDE_ENTRIES")
+COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS\nZoxide Entries:\n$EXCLUDED_ZOXIDE_ENTRIES")
 
 # Display the sessions in a fzf popup and allow the user to select one
 SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border --header="Sessions and Zoxide Entries")
@@ -70,9 +85,9 @@ elif echo "$TMUXP_SESSIONS" | grep -q -F "$SESSION_NAME"; then
     echo "Failed to load tmuxp session from file: $TMUXP_DIR/$ESCAPED_FILE_NAME.yaml" >&2
     exit 1
   fi
-elif echo "$ZOXIDE_ENTRIES" | grep -q -F "$ZOXIDE_DIR"; then
+elif echo "$EXCLUDED_ZOXIDE_ENTRIES" | grep -q -F "$ZOXIDE_DIR"; then
   # Extract the original directory path from the selected zoxide entry
-  ORIGINAL_DIR=$(echo "$ZOXIDE_ENTRIES" | grep -F "$ZOXIDE_DIR" | sed -e "s/^$ZOXIDE_ICON //")
+  ORIGINAL_DIR=$(echo "$EXCLUDED_ZOXIDE_ENTRIES" | grep -F "$ZOXIDE_DIR" | sed -e "s/^$ZOXIDE_ICON //")
 
   # Check if a session already exists in the zoxide directory
   EXISTING_SESSION=$(tmux list-sessions -F "#{session_name}" | grep -F "$ORIGINAL_DIR" | head -n 1)
@@ -82,7 +97,7 @@ elif echo "$ZOXIDE_ENTRIES" | grep -q -F "$ZOXIDE_DIR"; then
     tmux switch-client -t "$EXISTING_SESSION"
   else
     # Start a new tmux session in the selected directory
-    NEW_SESSION_NAME="zoxide_$(echo "$ORIGINAL_DIR" | sed 's/[^a-zA-Z0-9]/_/g')"
+    NEW_SESSION_NAME=$(basename "$ORIGINAL_DIR")
     tmux new-session -d -c "$ORIGINAL_DIR" -s "$NEW_SESSION_NAME"
 
     # Switch to the newly created tmux session
