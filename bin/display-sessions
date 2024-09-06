@@ -34,7 +34,7 @@ if [ -d "$TMUXP_DIR" ]; then
 fi
 
 # List zoxide entries using `zoxide query -l` and replace the full home path with ~
-# Use the final segment of the path for zoxide entries without replacing characters
+# Use the full zoxide entry path for tmux session names
 ZOXIDE_ENTRIES=$(zoxide query -l | awk -v home="$HOME" '{gsub(home, "~"); print "'$ZOXIDE_ICON' " $0}')
 
 # Combine the session lists
@@ -69,17 +69,17 @@ elif echo "$TMUXP_SESSIONS" | grep -q -F "$SESSION_NAME"; then
     exit 1
   fi
 elif [ -n "$ZOXIDE_PATH" ]; then
-  # Use the final segment of the zoxide path to name the tmux session
-  FINAL_SEGMENT=$(basename "$ZOXIDE_PATH")
+  # Use the full zoxide path as the tmux session name
+  FINAL_PATH="$ZOXIDE_PATH"
   # Check if a session with this name already exists
-  if tmux has-session -t "$FINAL_SEGMENT" 2>/dev/null; then
+  if tmux has-session -t "$FINAL_PATH" 2>/dev/null; then
     # If the session exists, switch to it
-    tmux switch-client -t "$FINAL_SEGMENT"
+    tmux switch-client -t "$FINAL_PATH"
   else
     # Create a new tmux session in the selected directory
-    tmux new-session -d -c "$ZOXIDE_PATH" -s "$FINAL_SEGMENT"
+    tmux new-session -d -c "$ZOXIDE_PATH" -s "$FINAL_PATH"
     # Attach to the newly created session
-    tmux switch-client -t "$FINAL_SEGMENT"
+    tmux switch-client -t "$FINAL_PATH"
   fi
 else
   echo "No matching tmux, tmuxp, or zoxide entry found for: $SESSION_NAME" >&2
