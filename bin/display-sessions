@@ -34,26 +34,11 @@ if [ -d "$TMUXP_DIR" ]; then
 fi
 
 # List zoxide entries using `zoxide query -l` and replace the full home path with ~
-# Extract just the basename of the directory for zoxide entries
+# Get the final segment of the path for zoxide entries and prepend the icon
 ZOXIDE_ENTRIES=$(zoxide query -l | awk -v home="$HOME" '{gsub(home, "~"); print "'$ZOXIDE_ICON' " substr($0, length(home) + 2)}')
 
-# Exclude zoxide entries that have the same basename as an active tmux session
-EXCLUDED_ZOXIDE_ENTRIES=$(echo "$ZOXIDE_ENTRIES" | awk -v active_sessions="$SESSIONS" '
-BEGIN {
-  split(active_sessions, sessions, "\n")
-  for (i in sessions) {
-    session_map[sessions[i]] = 1
-  }
-}
-{
-  entry_name = substr($0, index($0, " ") + 1)
-  if (!session_map[entry_name]) {
-    print
-  }
-}')
-
 # Combine the session lists
-COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS\nZoxide Entries:\n$EXCLUDED_ZOXIDE_ENTRIES")
+COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS\nZoxide Entries:\n$ZOXIDE_ENTRIES")
 
 # Display the sessions in a fzf popup and allow the user to select one
 SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border --header="Sessions and Zoxide Entries")
@@ -68,40 +53,33 @@ fi
 STRIPPED_SESSION="${SELECTED_SESSION#* }"
 SESSION_NAME=$(echo "$STRIPPED_SESSION" | sed -e 's/ (.*)//')
 FILE_NAME=$(echo "$STRIPPED_SESSION" | sed -e 's/.* (\(.*\))$/\1/')
-ZOXIDE_DIR=$(echo "$STRIPPED_SESSION" | sed -e 's/.* \(.*\)$/\1/')
+ZOXIDE_PATH=$(echo "$STRIPPED_SESSION" | sed -e "s/^$ZOXIDE_ICON //")
 
-# Ensure that the file name is properly quoted
-ESCAPED_FILE_NAME=$(printf '%q' "$FILE_NAME")
-
-# Switch to the selected tmux session if it exists, or load the tmuxp session in detached state
+# Handle tmux session or tmuxp session or zoxide entry
 if echo "$SESSIONS" | grep -q -F "$SESSION_NAME"; then
+  # Switch to the selected tmux session
   tmux switch-client -t "$SESSION_NAME"
 elif echo "$TMUXP_SESSIONS" | grep -q -F "$SESSION_NAME"; then
   # Load the tmuxp session in detached mode using the file name
-  if tmuxp load -d "$TMUXP_DIR/$ESCAPED_FILE_NAME.yaml"; then
+  if tmuxp load -d "$TMUXP_DIR/$FILE_NAME.yaml"; then
     # Immediately switch to the newly loaded session
     tmux switch-client -t "$SESSION_NAME"
   else
-    echo "Failed to load tmuxp session from file: $TMUXP_DIR/$ESCAPED_FILE_NAME.yaml" >&2
+    echo "Failed to load tmuxp session from file: $TMUXP_DIR/$FILE_NAME.yaml" >&2
     exit 1
   fi
-elif echo "$EXCLUDED_ZOXIDE_ENTRIES" | grep -q -F "$ZOXIDE_DIR"; then
-  # Extract the original directory path from the selected zoxide entry
-  ORIGINAL_DIR=$(echo "$EXCLUDED_ZOXIDE_ENTRIES" | grep -F "$ZOXIDE_DIR" | sed -e "s/^$ZOXIDE_ICON //")
-
-  # Check if a session already exists in the zoxide directory
-  EXISTING_SESSION=$(tmux list-sessions -F "#{session_name}" | grep -F "$ORIGINAL_DIR" | head -n 1)
-
-  if [ -n "$EXISTING_SESSION" ]; then
-    # Switch to the existing tmux session if it exists
-    tmux switch-client -t "$EXISTING_SESSION"
+elif [ -n "$ZOXIDE_PATH" ]; then
+  # Get the final segment of the zoxide path to name the tmux session
+  FINAL_SEGMENT=$(basename "$ZOXIDE_PATH")
+  # Check if a session with this name already exists
+  if tmux has-session -t "$FINAL_SEGMENT" 2>/dev/null; then
+    # If the session exists, switch to it
+    tmux switch-client -t "$FINAL_SEGMENT"
   else
-    # Start a new tmux session in the selected directory
-    NEW_SESSION_NAME=$(basename "$ORIGINAL_DIR")
-    tmux new-session -d -c "$ORIGINAL_DIR" -s "$NEW_SESSION_NAME"
-
-    # Switch to the newly created tmux session
-    tmux switch-client -t "$NEW_SESSION_NAME"
+    # Create a new tmux session in the selected directory
+    tmux new-session -d -c "$ZOXIDE_PATH" -s "$FINAL_SEGMENT"
+    # Attach to the newly created session
+    tmux switch-client -t "$FINAL_SEGMENT"
   fi
 else
   echo "No matching tmux, tmuxp, or zoxide entry found for: $SESSION_NAME" >&2
