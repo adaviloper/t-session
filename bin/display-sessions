@@ -1,12 +1,13 @@
 #!/bin/bash
 
+# Define colors using tput for compatibility
 GREEN=$(tput setaf 2)
 GREY=$(tput setaf 7)
 RESET=$(tput sgr0)
 
 # Define icons with colors
-SESSION_ICON=""    # Green icon for active tmux sessions
-TMUXP_ICON=""     # Grey icon for tmuxp sessions
+SESSION_ICON="${GREEN}🟢${RESET}"    # Green icon for active tmux sessions
+TMUXP_ICON="${GREY}📂${RESET}"     # Grey icon for tmuxp sessions
 
 # Get the current tmux session
 CURRENT_SESSION=$(tmux display-message -p '#S')
@@ -37,7 +38,7 @@ fi
 COMBINED_SESSIONS=$(echo -e "Tmux Sessions:\n$SESSIONS\n$TMUXP_SESSIONS")
 
 # Display the sessions in a tmux popup and allow the user to select one
-SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border)
+SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border --preview "echo {}" --preview-window=up:3 --ansi)
 
 # Exit if no session is selected (Escape or empty selection)
 if [ -z "$SELECTED_SESSION" ]; then
@@ -48,12 +49,12 @@ fi
 STRIPPED_SESSION="${SELECTED_SESSION#* }"
 
 # Switch to the selected tmux session if it exists, or load the tmuxp session in detached state
-if echo "$SESSIONS" | grep -q "$SELECTED_SESSION$"; then
+if echo "$SESSIONS" | grep -q -F "$STRIPPED_SESSION"; then
   tmux switch-client -t "$STRIPPED_SESSION"
-elif echo "$TMUXP_SESSIONS" | grep -q "$SELECTED_SESSION$"; then
+elif echo "$TMUXP_SESSIONS" | grep -q -F "$STRIPPED_SESSION"; then
   # Load the tmuxp session in detached mode
-  tmuxp load -y "$STRIPPED_SESSION"
+  tmuxp load -d "$STRIPPED_SESSION"
   # Immediately switch to the newly loaded session
-  # tmux switch-client -t "$STRIPPED_SESSION"
+  tmux switch-client -t "$STRIPPED_SESSION"
 fi
 
