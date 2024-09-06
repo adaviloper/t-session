@@ -70,14 +70,14 @@ elif echo "$TMUXP_SESSIONS" | grep -q -F "$SESSION_NAME"; then
   fi
 elif [ -n "$ZOXIDE_PATH" ]; then
   # Use the full zoxide path as the tmux session name
-  FINAL_PATH="$ZOXIDE_PATH"
+  FINAL_PATH=$(eval echo "$ZOXIDE_PATH")
   # Check if a session with this name already exists
   if tmux has-session -t "$FINAL_PATH" 2>/dev/null; then
     # If the session exists, switch to it
     tmux switch-client -t "$FINAL_PATH"
   else
     # Create a new tmux session in the selected directory
-    tmux new-session -d -c "$ZOXIDE_PATH" -s "$FINAL_PATH"
+    tmux new-session -d -c "$FINAL_PATH" -s "$FINAL_PATH"
     # Attach to the newly created session
     tmux switch-client -t "$FINAL_PATH"
   fi
