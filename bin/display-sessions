@@ -4,10 +4,13 @@
 SESSION_ICON="🟢"    # Icon for active tmux sessions
 TMUXP_ICON="📂"     # Icon for tmuxp sessions
 
-# List active tmux sessions and prepend the icon
-SESSIONS=$(tmux list-sessions -F "#{session_name}" | sed "s/^/$SESSION_ICON /")
+# Get the current tmux session
+CURRENT_SESSION=$(tmux display-message -p '#S')
 
-# List tmuxp sessions from the .config/tmuxp directory, excluding active ones
+# List active tmux sessions and prepend the icon, excluding the current session
+SESSIONS=$(tmux list-sessions -F "#{session_name}" | grep -v "^$CURRENT_SESSION$" | sed "s/^/$SESSION_ICON /")
+
+# List tmuxp sessions from the .config/tmuxp directory, excluding active ones and the current session
 # and only including those with valid start_directory paths
 TMUXP_DIR="$HOME/.config/tmuxp"
 if [ -d "$TMUXP_DIR" ]; then
@@ -19,20 +22,9 @@ if [ -d "$TMUXP_DIR" ]; then
     # Expand tilde (~) to the full home directory path
     start_directory=$(eval echo "$start_directory")
 
-    # Debug output
-    echo "Checking $file"
-    echo "Session name: $session_name"
-    echo "Start directory: $start_directory"
-
-    # Check if the session is not active and if the start_directory exists
-    if [ -d "$start_directory" ]; then
-      echo "Start directory exists."
-      if ! echo "$SESSIONS" | grep -q "$session_name"; then
-        echo "Session is not active. Adding to list."
-        TMUXP_SESSIONS+="$TMUXP_ICON $session_name"$'\n'
-      fi
-    else
-      echo "Start directory does not exist."
+    # Check if the session is not active (including the current session) and if the start_directory exists
+    if [ -d "$start_directory" ] && ! echo "$SESSIONS" | grep -q "$session_name" && [ "$session_name" != "$CURRENT_SESSION" ]; then
+      TMUXP_SESSIONS+="$TMUXP_ICON $session_name"$'\n'
     fi
   done
 fi
