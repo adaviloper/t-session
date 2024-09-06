@@ -38,7 +38,7 @@ fi
 ZOXIDE_ENTRIES=$(zoxide query -l | awk -v home="$HOME" '{gsub(home, "~"); print "'$ZOXIDE_ICON' " $0}')
 
 # Combine the session lists
-COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS\n$ZOXIDE_ENTRIES")
+COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS$ZOXIDE_ENTRIES")
 
 # Display the sessions in a fzf popup and allow the user to select one
 SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border --header="Sessions and Zoxide Entries")
