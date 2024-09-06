@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Define icons with colors
-SESSION_ICON=""    # Green icon for active tmux sessions
-TMUXP_ICON=""     # Grey icon for tmuxp sessions
+SESSION_ICON=""    # Icon for active tmux sessions
+TMUXP_ICON=""     # Icon for tmuxp sessions
+ZOXIDE_ICON="📂"    # Icon for zoxide entries
 
 # Get the current tmux session
 CURRENT_SESSION=$(tmux display-message -p '#S')
@@ -32,11 +33,14 @@ if [ -d "$TMUXP_DIR" ]; then
   done
 fi
 
-# Combine the session lists
-COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS")
+# List zoxide entries
+ZOXIDE_ENTRIES=$(zoxide list | awk '{print "'$ZOXIDE_ICON' "$0}')
 
-# Display the sessions in a tmux popup and allow the user to select one
-SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border --header="Sessions")
+# Combine the session lists
+COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS\nZoxide Entries:\n$ZOXIDE_ENTRIES")
+
+# Display the sessions in a fzf popup and allow the user to select one
+SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border --header="Sessions and Zoxide Entries")
 
 # Exit if no session is selected (Escape or empty selection)
 if [ -z "$SELECTED_SESSION" ]; then
@@ -44,10 +48,11 @@ if [ -z "$SELECTED_SESSION" ]; then
 fi
 
 # Strip the icon and session name (with file name) from the selected session
-# Format: "SESSION_ICON session_name (file_name)"
+# Format: "ICON session_name (file_name)" or "ICON zoxide_entry"
 STRIPPED_SESSION="${SELECTED_SESSION#* }"
 SESSION_NAME=$(echo "$STRIPPED_SESSION" | sed -e 's/ (.*)//')
 FILE_NAME=$(echo "$STRIPPED_SESSION" | sed -e 's/.* (\(.*\))$/\1/')
+ZOXIDE_DIR=$(echo "$STRIPPED_SESSION" | sed -e 's/.* \(.*\)$/\1/')
 
 # Ensure that the file name is properly quoted
 ESCAPED_FILE_NAME=$(printf '%q' "$FILE_NAME")
@@ -57,8 +62,18 @@ if echo "$SESSIONS" | grep -q -F "$SESSION_NAME"; then
   tmux switch-client -t "$SESSION_NAME"
 elif echo "$TMUXP_SESSIONS" | grep -q -F "$SESSION_NAME"; then
   # Load the tmuxp session in detached mode using the file name
-  tmuxp load -d "$TMUXP_DIR/$ESCAPED_FILE_NAME.yaml"
-  # Immediately switch to the newly loaded session
-  tmux switch-client -t "$SESSION_NAME"
+  if tmuxp load -d "$TMUXP_DIR/$ESCAPED_FILE_NAME.yaml"; then
+    # Immediately switch to the newly loaded session
+    tmux switch-client -t "$SESSION_NAME"
+  else
+    echo "Failed to load tmuxp session from file: $TMUXP_DIR/$ESCAPED_FILE_NAME.yaml" >&2
+    exit 1
+  fi
+elif echo "$ZOXIDE_ENTRIES" | grep -q -F "$ZOXIDE_DIR"; then
+  # Change directory to the selected zoxide entry
+  zoxide cd "$ZOXIDE_DIR"
+else
+  echo "No matching tmux, tmuxp, or zoxide entry found for: $SESSION_NAME" >&2
+  exit 1
 fi
 
