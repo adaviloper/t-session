@@ -27,9 +27,12 @@ if [ -d "$TMUXP_DIR" ]; then
     # Expand tilde (~) to the full home directory path
     start_directory=$(eval echo "$start_directory")
 
+    # Get the base file name without extension for tmuxp session
+    file_name=$(basename "$file" .yaml)
+
     # Check if the session is not active (including the current session) and if the start_directory exists
     if [ -d "$start_directory" ] && ! echo "$SESSIONS" | grep -q -F "$session_name" && [ "$session_name" != "$CURRENT_SESSION" ]; then
-      TMUXP_SESSIONS+="$TMUXP_ICON $session_name"$'\n'
+      TMUXP_SESSIONS+="$TMUXP_ICON $session_name ($file_name)"$'\n'
     fi
   done
 fi
@@ -45,19 +48,22 @@ if [ -z "$SELECTED_SESSION" ]; then
   exit 0
 fi
 
-# Strip the icon from the selected session before handling it
+# Strip the icon and session name (with file name) from the selected session
+# Format: "SESSION_ICON session_name (file_name)"
 STRIPPED_SESSION="${SELECTED_SESSION#* }"
+SESSION_NAME=$(echo "$STRIPPED_SESSION" | sed -e 's/ (.*)//')
+FILE_NAME=$(echo "$STRIPPED_SESSION" | sed -e 's/.* (\(.*\))$/\1/')
 
-# Ensure that the selected session name is properly quoted
-ESCAPED_SESSION=$(printf '%q' "$STRIPPED_SESSION")
+# Ensure that the file name is properly quoted
+ESCAPED_FILE_NAME=$(printf '%q' "$FILE_NAME")
 
 # Switch to the selected tmux session if it exists, or load the tmuxp session in detached state
-if echo "$SESSIONS" | grep -q -F "$ESCAPED_SESSION"; then
-  tmux switch-client -t "$ESCAPED_SESSION"
-elif echo "$TMUXP_SESSIONS" | grep -q -F "$ESCAPED_SESSION"; then
-  # Load the tmuxp session in detached mode
-  tmuxp load -d "$ESCAPED_SESSION"
+if echo "$SESSIONS" | grep -q -F "$SESSION_NAME"; then
+  tmux switch-client -t "$SESSION_NAME"
+elif echo "$TMUXP_SESSIONS" | grep -q -F "$SESSION_NAME"; then
+  # Load the tmuxp session in detached mode using the file name
+  tmuxp load -d "$TMUXP_DIR/$ESCAPED_FILE_NAME.yaml"
   # Immediately switch to the newly loaded session
-  tmux switch-client -t "$ESCAPED_SESSION"
+  tmux switch-client -t "$SESSION_NAME"
 fi
 
