@@ -34,7 +34,7 @@ if [ -d "$TMUXP_DIR" ]; then
 fi
 
 # Combine the session lists
-COMBINED_SESSIONS=$(echo -e "Sessions:\n$SESSIONS\n$TMUXP_SESSIONS")
+COMBINED_SESSIONS=$(echo -e "Tmux Sessions:\n$SESSIONS\n\nTmuxp Sessions:\n$TMUXP_SESSIONS")
 
 # Display the sessions in a tmux popup and allow the user to select one
 SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border)
@@ -52,8 +52,8 @@ if echo "$SESSIONS" | grep -q "$SELECTED_SESSION$"; then
   tmux switch-client -t "$STRIPPED_SESSION"
 elif echo "$TMUXP_SESSIONS" | grep -q "$SELECTED_SESSION$"; then
   # Load the tmuxp session in detached mode
-  tmuxp load -d "$STRIPPED_SESSION"
+  tmuxp load -y "$STRIPPED_SESSION"
   # Immediately switch to the newly loaded session
-  tmux switch-client -t "$STRIPPED_SESSION"
+  # tmux switch-client -t "$STRIPPED_SESSION"
 fi
 
