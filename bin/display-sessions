@@ -34,13 +34,13 @@ if [ -d "$TMUXP_DIR" ]; then
 fi
 
 # List zoxide entries and replace the full home path with ~
-ZOXIDE_ENTRIES=$(zoxide query -l | awk -v home="$HOME" '{gsub(home, "~"); print "'$ZOXIDE_ICON' " $0}')
+ZOXIDE_ENTRIES=$(zoxide list | awk -v home="$HOME" '{gsub(home, "~"); print "'$ZOXIDE_ICON' " $0}')
 
 # Combine the session lists
-COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS$ZOXIDE_ENTRIES")
+COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS\nZoxide Entries:\n$ZOXIDE_ENTRIES")
 
 # Display the sessions in a fzf popup and allow the user to select one
-SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border --header="Sessions")
+SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border --header="Sessions and Zoxide Entries")
 
 # Exit if no session is selected (Escape or empty selection)
 if [ -z "$SELECTED_SESSION" ]; then
@@ -72,8 +72,21 @@ elif echo "$TMUXP_SESSIONS" | grep -q -F "$SESSION_NAME"; then
 elif echo "$ZOXIDE_ENTRIES" | grep -q -F "$ZOXIDE_DIR"; then
   # Extract the original directory path from the selected zoxide entry
   ORIGINAL_DIR=$(echo "$ZOXIDE_ENTRIES" | grep -F "$ZOXIDE_DIR" | sed -e "s/^$ZOXIDE_ICON //")
-  # Change directory to the selected zoxide entry
-  zoxide cd "$ORIGINAL_DIR"
+
+  # Check if a session already exists in the zoxide directory
+  EXISTING_SESSION=$(tmux list-sessions -F "#{session_name}" | grep -F "$ORIGINAL_DIR" | head -n 1)
+
+  if [ -n "$EXISTING_SESSION" ]; then
+    # Switch to the existing tmux session if it exists
+    tmux switch-client -t "$EXISTING_SESSION"
+  else
+    # Start a new tmux session in the selected directory
+    NEW_SESSION_NAME="zoxide_$(echo "$ORIGINAL_DIR" | sed 's/[^a-zA-Z0-9]/_/g')"
+    tmux new-session -d -c "$ORIGINAL_DIR" -s "$NEW_SESSION_NAME"
+
+    # Switch to the newly created tmux session
+    tmux switch-client -t "$NEW_SESSION_NAME"
+  fi
 else
   echo "No matching tmux, tmuxp, or zoxide entry found for: $SESSION_NAME" >&2
   exit 1
