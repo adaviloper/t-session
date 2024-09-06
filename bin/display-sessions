@@ -34,8 +34,8 @@ if [ -d "$TMUXP_DIR" ]; then
 fi
 
 # List zoxide entries using `zoxide query -l` and replace the full home path with ~
-# Get the final segment of the path for zoxide entries and prepend the icon
-ZOXIDE_ENTRIES=$(zoxide query -l | awk -v home="$HOME" '{gsub(home, "~"); print "'$ZOXIDE_ICON' " substr($0, length(home) + 2)}')
+# Use the final segment of the path for zoxide entries without replacing characters
+ZOXIDE_ENTRIES=$(zoxide query -l | awk -v home="$HOME" '{gsub(home, "~"); print "'$ZOXIDE_ICON' " $0}')
 
 # Combine the session lists
 COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS\nZoxide Entries:\n$ZOXIDE_ENTRIES")
@@ -69,7 +69,7 @@ elif echo "$TMUXP_SESSIONS" | grep -q -F "$SESSION_NAME"; then
     exit 1
   fi
 elif [ -n "$ZOXIDE_PATH" ]; then
-  # Get the final segment of the zoxide path to name the tmux session
+  # Use the final segment of the zoxide path to name the tmux session
   FINAL_SEGMENT=$(basename "$ZOXIDE_PATH")
   # Check if a session with this name already exists
   if tmux has-session -t "$FINAL_SEGMENT" 2>/dev/null; then
