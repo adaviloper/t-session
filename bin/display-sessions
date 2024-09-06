@@ -77,7 +77,7 @@ elif [ -n "$ZOXIDE_PATH" ]; then
     tmux switch-client -t "$FINAL_PATH"
   else
     # Create a new tmux session in the selected directory
-    tmux new-session -d -c "$FINAL_PATH" -s "$FINAL_PATH"
+    tmux new-session -d -c "$FINAL_PATH" -s "$ZOXIDE_PATH"
     # Attach to the newly created session
     tmux switch-client -t "$FINAL_PATH"
   fi
