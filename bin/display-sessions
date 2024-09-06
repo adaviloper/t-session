@@ -38,19 +38,7 @@ fi
 ZOXIDE_ENTRIES=$(zoxide query -l | awk -v home="$HOME" '{gsub(home, "~"); print "'$ZOXIDE_ICON' " basename($0)}')
 
 # Exclude zoxide entries that have the same basename as an active tmux session
-EXCLUDED_ZOXIDE_ENTRIES=$(echo "$ZOXIDE_ENTRIES" | awk -v active_sessions="$SESSIONS" '
-BEGIN {
-  split(active_sessions, sessions, "\n")
-  for (i in sessions) {
-    session_map[sessions[i]] = 1
-  }
-}
-{
-  entry_name = substr($0, index($0, " ") + 1)
-  if (!session_map[entry_name]) {
-    print
-  }
-}')
+EXCLUDED_ZOXIDE_ENTRIES=$(echo "$ZOXIDE_ENTRIES" | awk -v active_sessions="$SESSIONS")
 
 # Combine the session lists
 COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS\nZoxide Entries:\n$EXCLUDED_ZOXIDE_ENTRIES")
