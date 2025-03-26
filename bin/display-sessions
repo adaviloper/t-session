@@ -41,7 +41,17 @@ ZOXIDE_ENTRIES=$(zoxide query -l | awk -v home="$HOME" '{gsub(home, "~"); print 
 COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS$ZOXIDE_ENTRIES")
 
 # Display the sessions in a fzf popup and allow the user to select one
-SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | fzf --layout=reverse --border --header="Sessions and Zoxide Entries")
+SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | \
+  fzf --layout=reverse \
+    --style full \
+    --border \
+    --border-label ' Select a Session ' \
+    --input-label ' Query ' \
+    --color 'border:#a6e3a1,label:#a6e3a1,input:#ccccff' \
+    --color 'list-border:#89b4fa,list-label:#89b4fa' \
+    --color 'input-border:#89b4fa,input-label:#89b4fa' \
+    --color 'header-border:#6699cc,header-label:#99ccff' \
+    --multi)
 
 # Exit if no session is selected (Escape or empty selection)
 if [ -z "$SELECTED_SESSION" ]; then
