@@ -17,8 +17,8 @@ TMUXP_DIR="$HOME/.config/tmuxp"
 if [ -d "$TMUXP_DIR" ]; then
   TMUXP_SESSIONS=""
   for file in "$TMUXP_DIR"/*.yaml; do
-    session_name=$(yq e '.session_name' "$file")  # Extract session_name using yq
-    start_directory=$(yq e '.start_directory' "$file")  # Extract start_directory using yq
+    session_name=$(yq -r '.session_name' "$file")  # Extract session_name using yq
+    start_directory=$(yq -r '.start_directory' "$file")  # Extract start_directory using yq
 
     # Expand tilde (~) to the full home directory path
     start_directory=$(eval echo "$start_directory")
