@@ -79,18 +79,17 @@ elif echo "$TMUXP_SESSIONS" | grep -q -F "$SESSION_NAME"; then
     exit 1
   fi
 elif [ -n "$ZOXIDE_PATH" ]; then
-  # Use the full zoxide path as the tmux session name
+  # Route zoxide entries to a single "Miscellaneous" session
   FINAL_PATH=$(eval echo "$ZOXIDE_PATH")
-  # Check if a session with this name already exists
-  if tmux has-session -t "$FINAL_PATH" 2>/dev/null; then
-    # If the session exists, switch to it
-    tmux switch-client -t "$FINAL_PATH"
+  MISC_SESSION="Miscellaneous"
+  # Create the session if it does not exist, otherwise open a new window in it
+  if ! tmux has-session -t "$MISC_SESSION" 2>/dev/null; then
+    tmux new-session -d -s "$MISC_SESSION" -c "$FINAL_PATH" -n "$ZOXIDE_PATH"
   else
-    # Create a new tmux session in the selected directory
-    tmux new-session -d -c "$FINAL_PATH" -s "$ZOXIDE_PATH"
-    # Attach to the newly created session
-    tmux switch-client -t "$ZOXIDE_PATH"
+    tmux new-window -t "$MISC_SESSION:" -c "$FINAL_PATH" -n "$ZOXIDE_PATH"
   fi
+  # Switch to the Miscellaneous session (the newly created window will be active there)
+  tmux switch-client -t "$MISC_SESSION"
 else
   echo "No matching tmux, tmuxp, or zoxide entry found for: $SESSION_NAME" >&2
   exit 1
