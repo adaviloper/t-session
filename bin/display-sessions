@@ -86,7 +86,8 @@ elif [ -n "$ZOXIDE_PATH" ]; then
   if ! tmux has-session -t "$MISC_SESSION" 2>/dev/null; then
     tmux new-session -d -s "$MISC_SESSION" -c "$FINAL_PATH" -n "$ZOXIDE_PATH"
   else
-    tmux new-window -t "$MISC_SESSION:" -c "$FINAL_PATH" -n "$ZOXIDE_PATH"
+    WINDOW_ID=$(tmux new-window -P -F '#{window_id}' -t "$MISC_SESSION:" -c "$FINAL_PATH" -n "$ZOXIDE_PATH")
+    tmux set-window-option -t "$WINDOW_ID" default-path "$FINAL_PATH" 2>/dev/null || true
   fi
   # Switch to the Miscellaneous session (the newly created window will be active there)
   tmux switch-client -t "$MISC_SESSION"
