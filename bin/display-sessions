@@ -82,14 +82,23 @@ elif [ -n "$ZOXIDE_PATH" ]; then
   # Route zoxide entries to a single "Miscellaneous" session
   FINAL_PATH=$(eval echo "$ZOXIDE_PATH")
   MISC_SESSION="Miscellaneous"
-  # Create the session if it does not exist, otherwise open a new window in it
+  # Check if the Miscellaneous session exists
   if ! tmux has-session -t "$MISC_SESSION" 2>/dev/null; then
+    # Create the session if it does not exist
     tmux new-session -d -s "$MISC_SESSION" -c "$FINAL_PATH" -n "$ZOXIDE_PATH"
   else
-    WINDOW_ID=$(tmux new-window -P -F '#{window_id}' -t "$MISC_SESSION:" -c "$FINAL_PATH" -n "$ZOXIDE_PATH")
-    tmux set-window-option -t "$WINDOW_ID" default-path "$FINAL_PATH" 2>/dev/null || true
+    # Check if a window with this name already exists in the Miscellaneous session
+    EXISTING_WINDOW=$(tmux list-windows -t "$MISC_SESSION" -F '#{window_name}' | grep -Fx "$ZOXIDE_PATH" | head -n 1)
+    if [ -n "$EXISTING_WINDOW" ]; then
+      # Window exists, switch to it
+      tmux select-window -t "$MISC_SESSION:$ZOXIDE_PATH"
+    else
+      # Window doesn't exist, create a new window
+      WINDOW_ID=$(tmux new-window -P -F '#{window_id}' -t "$MISC_SESSION:" -c "$FINAL_PATH" -n "$ZOXIDE_PATH")
+      tmux set-window-option -t "$WINDOW_ID" default-path "$FINAL_PATH" 2>/dev/null || true
+    fi
   fi
-  # Switch to the Miscellaneous session (the newly created window will be active there)
+  # Switch to the Miscellaneous session (the target window will be active there)
   tmux switch-client -t "$MISC_SESSION"
 else
   echo "No matching tmux, tmuxp, or zoxide entry found for: $SESSION_NAME" >&2
