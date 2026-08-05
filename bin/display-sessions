@@ -9,7 +9,7 @@ ZOXIDE_GLYPH=""    # folder, zoxide entries
 # so they follow whatever theme the terminal is set to.
 # N: 0 black  1 red  2 green  3 yellow  4 blue  5 magenta  6 cyan  7 white  8-15 bright variants
 COLOR_SESSION=$(tput setaf 2)   # green
-COLOR_TMUXP=$(tput setaf 8)     # grey
+COLOR_TMUXP=$(tput setaf 7)     # grey
 COLOR_ZOXIDE=$(tput setaf 4)    # blue
 COLOR_RESET=$(tput sgr0)
 
