@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Define icons with colors
-SESSION_ICON=""    # Icon for active tmux sessions
-TMUXP_ICON=""     # Icon for tmuxp sessions
-ZOXIDE_ICON=""    # Icon for zoxide entries
+SESSION_ICON=$'\033[38;2;166;227;161m'""$'\033[0m'    # Icon for active tmux sessions
+TMUXP_ICON=$'\033[90m'""$'\033[0m'     # Icon for tmuxp sessions
+ZOXIDE_ICON=$'\033[34m'""$'\033[0m'    # Icon for zoxide entries
 
 # Get the current tmux session
 CURRENT_SESSION=$(tmux display-message -p '#S')
@@ -43,7 +43,8 @@ COMBINED_SESSIONS=$(echo -e "$SESSIONS\n$TMUXP_SESSIONS$ZOXIDE_ENTRIES")
 
 # Display the sessions in a fzf popup and allow the user to select one
 SELECTED_SESSION=$(echo -e "$COMBINED_SESSIONS" | \
-  fzf --layout=reverse \
+  fzf --ansi \
+    --layout=reverse \
     --style full \
     --border \
     --border-label ' Select a Session ' \
