@@ -1,9 +1,21 @@
 #!/bin/bash
 
-# Define icons with colors
-SESSION_ICON=$'\033[38;2;166;227;161m'""$'\033[0m'    # Icon for active tmux sessions
-TMUXP_ICON=$'\033[90m'""$'\033[0m'     # Icon for tmuxp sessions
-ZOXIDE_ICON=$'\033[34m'""$'\033[0m'    # Icon for zoxide entries
+# Icon glyphs (nerd font)
+SESSION_GLYPH=""    # terminal/active tmux sessions
+TMUXP_GLYPH=""     # gear, tmuxp sessions
+ZOXIDE_GLYPH=""    # folder, zoxide entries
+
+# Icon colors - pulled from the terminal's own ANSI palette (tput setaf N),
+# so they follow whatever theme the terminal is set to.
+# N: 0 black  1 red  2 green  3 yellow  4 blue  5 magenta  6 cyan  7 white  8-15 bright variants
+COLOR_SESSION=$(tput setaf 2)   # green
+COLOR_TMUXP=$(tput setaf 8)     # grey
+COLOR_ZOXIDE=$(tput setaf 4)    # blue
+COLOR_RESET=$(tput sgr0)
+
+SESSION_ICON="${COLOR_SESSION}${SESSION_GLYPH}${COLOR_RESET}"
+TMUXP_ICON="${COLOR_TMUXP}${TMUXP_GLYPH}${COLOR_RESET}"
+ZOXIDE_ICON="${COLOR_ZOXIDE}${ZOXIDE_GLYPH}${COLOR_RESET}"
 
 # Get the current tmux session
 CURRENT_SESSION=$(tmux display-message -p '#S')
