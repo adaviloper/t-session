@@ -77,7 +77,7 @@ fi
 STRIPPED_SESSION="${SELECTED_SESSION#* }"
 SESSION_NAME=$(echo "$STRIPPED_SESSION" | sed -e 's/ (.*)//')
 FILE_NAME=$(echo "$STRIPPED_SESSION" | sed -e 's/.* (\(.*\))$/\1/')
-ZOXIDE_PATH=$(echo "$STRIPPED_SESSION" | sed -e "s/^$ZOXIDE_ICON //")
+ZOXIDE_PATH="$STRIPPED_SESSION"
 
 # Handle tmux session or tmuxp session or zoxide entry
 if echo "$SESSIONS" | grep -q -F "$SESSION_NAME"; then
